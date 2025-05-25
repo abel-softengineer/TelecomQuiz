@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+  <meta charset="UTF-8" />
+  <title>Adatbazis kviz</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+  </style>
+</head>
+<body>
+  <h1>Adatbázis kvíz</h1>
+  <p id="prompt">Mi az angol megfelelője ennek a szónak?</p>
+  <h2 id="word">–</h2>
+  <input type="text" id="answer" placeholder="Írd be az angol szót" autocomplete="off" />
+  <div style="text-align:center;">
+    <button onclick="checkAnswer()">Ellenőrzés</button>
+    <button onclick="nextWord()">Következő szó</button>
+    <button onclick="toggleLanguage()">Irány váltása (magyar → angol)</button>
+  </div>
+  <p id="result"></p>
+
+  <script>
+    let glossary = {};
+    let words = [];
+    let current = 0;
+    // true: magyar szó kérve, angol válasz kell
+    // false: angol szó kérve, magyar válasz kell
+    let askInHungarian = true;
+
+    async function loadGlossary() {
+      try {
+        const response = await fetch('glossary.json');
+        glossary = await response.json();
+        words = Object.entries(glossary);
+        nextWord();
+      } catch (error) {
+        console.error('Nem sikerült betölteni a glossary.json fájlt:', error);
+        const result = document.getElementById('result');
+        result.textContent = 'Nem sikerült betölteni az adatokat.';
+        result.className = 'error';
+      }
+    }
+
+    function nextWord() {
+      if(words.length === 0) return;
+      current = Math.floor(Math.random() * words.length);
+      const wordElem = document.getElementById("word");
+      const answerInput = document.getElementById("answer");
+      const result = document.getElementById("result");
+
+      if (askInHungarian) {
+        // magyar szó mutatva, angol válasz kell
+        wordElem.textContent = words[current][0];
+        answerInput.placeholder = "Írd be az angol szót";
+        document.getElementById("prompt").textContent = "Mi az angol megfelelője ennek a szónak?";
+      } else {
+        // angol szó mutatva, magyar válasz kell
+        wordElem.textContent = words[current][1];
+        answerInput.placeholder = "Írd be a magyar szót";
+        document.getElementById("prompt").textContent = "Mi a magyar megfelelője ennek a szónak?";
+      }
+
+      answerInput.value = "";
+      result.textContent = "";
+      result.className = "";
+      answerInput.focus();
+    }
+
+    function checkAnswer() {
+      if(words.length === 0) return;
+      const userInput = document.getElementById("answer").value.trim().toLowerCase();
+      const result = document.getElementById("result");
+
+      if (askInHungarian) {
+        // magyar szót kérünk, angol a helyes válasz
+        const correct = words[current][1].toLowerCase();
+        if(userInput === correct) {
+          result.textContent = "✅ Helyes!";
+          result.className = "success";
+        } else {
+          result.textContent = `❌ Helytelen! A helyes válasz: ${words[current][1]}`;
+          result.className = "error";
+        }
+      } else {
+        // angol szót kérünk, magyar a helyes válasz
+        const correct = words[current][0].toLowerCase();
+        if(userInput === correct) {
+          result.textContent = "✅ Helyes!";
+          result.className = "success";
+        } else {
+          result.textContent = `❌ Helytelen! A helyes válasz: ${words[current][0]}`;
+          result.className = "error";
+        }
+      }
+    }
+
+    function toggleLanguage() {
+      askInHungarian = !askInHungarian;
+      const btn = document.querySelector("button[onclick='toggleLanguage()']");
+      btn.textContent = askInHungarian 
+        ? "Irány váltása (magyar → angol)" 
+        : "Irány váltása (angol → magyar)";
+      nextWord();
+    }
+
+    window.onload = loadGlossary;
+  </script>
+</body>
+</html>
