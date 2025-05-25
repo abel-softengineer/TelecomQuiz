@@ -29,7 +29,7 @@
 
     async function loadGlossary() {
       try {
-        const response = await fetch('glossary.json');
+        const response = await fetch('data.json');
         glossary = await response.json();
         words = Object.entries(glossary);
         nextWord();
